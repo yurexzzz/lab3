@@ -4,57 +4,71 @@
 /**
  * @brief Структура для хранения матрицы.
  */
-typedef struct {
+struct Matrix {
     double** data;
     int rows;
     int cols;
-} Matrix;
+};
 
 /**
  * @brief Создаёт матрицу заданного размера.
- * @param rows Количество строк.
- * @param cols Количество столбцов.
- * @return Новая матрица, заполненная нулями.
- * @exception std::invalid_argument Если размеры некорректны.
+ * @param rows Положительное количество строк.
+ * @param cols Положительное количество столбцов.
+ * @return Новая матрица, заполненная нулями; память освобождается через free_matrix.
+ * @exception std::invalid_argument Если rows или cols не положительны.
+ * @exception std::bad_alloc Если не удалось выделить память.
  */
 Matrix create_matrix(int rows, int cols);
 
 /**
  * @brief Освобождает память, выделенную для матрицы.
- * @param m Матрица, память которой необходимо освободить.
+ * @param matrix Матрица, полученная из create_matrix или операции над матрицами.
+ * @return Ничего не возвращает.
+ * @note При data == nullptr ничего не делает, исключений не выбрасывает.
+ * Матрица передаётся по значению: после освобождения исходный объект и его копии
+ * содержат недействительный указатель, повторно освобождать их нельзя.
  */
-void free_matrix(Matrix m);
+void free_matrix(Matrix matrix);
 
 /**
  * @brief Складывает две матрицы.
- * @param a Первая матрица.
- * @param b Вторая матрица.
- * @return Новая матрица с результатом сложения.
- * @exception std::invalid_argument Если размеры матриц не совпадают.
+ * @param first_matrix Первая матрица с выделенными строками данных.
+ * @param second_matrix Вторая матрица с выделенными строками данных.
+ * @return Новая матрица с суммой; память освобождается через free_matrix.
+ * @exception std::invalid_argument Если размеры не совпадают, не положительны
+ * или один из указателей data равен nullptr.
+ * @exception std::bad_alloc Если не удалось выделить память для результата.
  */
-Matrix matrix_add(Matrix a, Matrix b);
+Matrix add_matrices(Matrix first_matrix, Matrix second_matrix);
 
 /**
  * @brief Умножает две матрицы.
- * @param a Первая матрица.
- * @param b Вторая матрица.
- * @return Новая матрица с результатом умножения.
- * @exception std::invalid_argument Если размеры матриц несовместимы.
+ * @param first_matrix Первая матрица с положительными размерами и выделенными строками.
+ * @param second_matrix Вторая матрица с положительными размерами и выделенными строками.
+ * @return Новая матрица с произведением; память освобождается через free_matrix.
+ * @exception std::invalid_argument Если число столбцов первой матрицы не равно
+ * числу строк второй, один из data равен nullptr или размеры результата не положительны.
+ * @exception std::bad_alloc Если не удалось выделить память для результата.
  */
-Matrix matrix_multiply(Matrix a, Matrix b);
+Matrix multiply_matrices(Matrix first_matrix, Matrix second_matrix);
 
 /**
  * @brief Выводит матрицу в консоль.
- * @param m Матрица для вывода.
+ * @param matrix Матрица для вывода с выделенными строками данных.
+ * @return Ничего не возвращает.
+ * @note При data == nullptr или неположительных размерах выводит [Empty matrix].
+ * Большие матрицы выводятся в сокращённом виде.
+ * @exception std::ios_base::failure При ошибке вывода, если для std::cout включены исключения.
  */
-void print_matrix(Matrix m);
+void print_matrix(Matrix matrix);
 
 /**
  * @brief Транспонирует матрицу.
- * @param m Исходная матрица.
- * @return Новая транспонированная матрица.
- * @exception std::invalid_argument Если указатель на данные равен nullptr.
+ * @param matrix Исходная матрица с выделенными строками данных.
+ * @return Новая транспонированная матрица; память освобождается через free_matrix.
+ * @exception std::invalid_argument Если data равен nullptr или размеры не положительны.
+ * @exception std::bad_alloc Если не удалось выделить память для результата.
  */
-Matrix matrix_transpose(Matrix m);
+Matrix transpose_matrix(Matrix matrix);
 
 #endif

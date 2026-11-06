@@ -1,30 +1,39 @@
 #include "matrix.h"
-#include <stdio.h>
+#include <cstdio>
+
+namespace {
+inline constexpr int kExampleSize = 2;
+} // namespace
 
 int main() {
-    Matrix A = create_matrix(2, 2);
-    Matrix B = create_matrix(2, 2);
+    Matrix first_matrix = create_matrix(kExampleSize, kExampleSize);
+    Matrix second_matrix = create_matrix(kExampleSize, kExampleSize);
 
-    A.data[0][0] = 1; A.data[0][1] = 2;
-    A.data[1][0] = 3; A.data[1][1] = 4;
+    // Исходные данные демонстрационного примера.
+    first_matrix.data[0][0] = 1;
+    first_matrix.data[0][1] = 2;
+    first_matrix.data[1][0] = 3;
+    first_matrix.data[1][1] = 4;
 
-    B.data[0][0] = 5; B.data[0][1] = 6;
-    B.data[1][0] = 7; B.data[1][1] = 8;
+    second_matrix.data[0][0] = 5;
+    second_matrix.data[0][1] = 6;
+    second_matrix.data[1][0] = 7;
+    second_matrix.data[1][1] = 8;
 
-    Matrix sum = matrix_add(A, B);
-    Matrix product = matrix_multiply(A, B);
+    Matrix sum = add_matrices(first_matrix, second_matrix);
+    Matrix product = multiply_matrices(first_matrix, second_matrix);
 
-    printf("Matrix A:\n");
-    print_matrix(A);
+    std::printf("Matrix A:\n");
+    print_matrix(first_matrix);
 
-    printf("Matrix B:\n");
-    print_matrix(B);
+    std::printf("Matrix B:\n");
+    print_matrix(second_matrix);
 
-    printf("Sum A+B:\n");
+    std::printf("Sum A+B:\n");
     print_matrix(sum);
 
-    free_matrix(A);
-    free_matrix(B);
+    free_matrix(first_matrix);
+    free_matrix(second_matrix);
     free_matrix(sum);
     free_matrix(product);
 

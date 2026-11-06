@@ -1,102 +1,105 @@
 #include "matrix.h"
-#include <iostream>
-#include <stdexcept>
-#include <new>
-#include <iomanip> 
 #include <algorithm>
+#include <iomanip>
+#include <iostream>
+#include <new>
+#include <stdexcept>
+
+namespace {
+inline constexpr int kOutputPrecision = 2;
+inline constexpr int kMaxRowsToShow = 10;
+inline constexpr int kMaxColsToShow = 8;
+inline constexpr int kElementWidth = 6;
+inline constexpr int kSummaryMarkerCount = 2;
+} // namespace
 
 Matrix create_matrix(int rows, int cols) {
     if (rows <= 0 || cols <= 0) {
         throw std::invalid_argument("Matrix dimensions must be positive integers");
     }
 
-    Matrix mat;
-    mat.rows = rows;
-    mat.cols = cols;
+    Matrix matrix;
+    matrix.rows = rows;
+    matrix.cols = cols;
 
-    mat.data = new double*[rows];
-    if (mat.data == nullptr) {
+    matrix.data = new double*[rows];
+    if (matrix.data == nullptr) {
         throw std::bad_alloc();
     }
 
     for (int i = 0; i < rows; i++) {
-        mat.data[i] = new double[cols];
-        if (mat.data[i] == nullptr) {
+        matrix.data[i] = new double[cols];
+        if (matrix.data[i] == nullptr) {
             for (int j = 0; j < i; j++) {
-                delete[] mat.data[j];
+                delete[] matrix.data[j];
             }
-            delete[] mat.data;
+            delete[] matrix.data;
             throw std::bad_alloc();
         }
 
         for (int j = 0; j < cols; j++) {
-            mat.data[i][j] = 0.0;
+            matrix.data[i][j] = 0.0;
         }
     }
 
-    return mat;
+    return matrix;
 }
 
-
-void free_matrix(Matrix m) {
-    if (m.data == nullptr) {
+void free_matrix(Matrix matrix) {
+    if (matrix.data == nullptr) {
         return;
     }
 
-    // 2. Освобождение памяти каждой строки
-    for (int i = 0; i < m.rows; i++) {
-        if (m.data[i] != nullptr) {
-            delete[] m.data[i];
-            m.data[i] = nullptr;
+    // Освобождаем память каждой строки.
+    for (int i = 0; i < matrix.rows; i++) {
+        if (matrix.data[i] != nullptr) {
+            delete[] matrix.data[i];
+            matrix.data[i] = nullptr;
         }
     }
 
-    delete[] m.data;
+    delete[] matrix.data;
 
-    m.data = nullptr;
-    m.rows = 0;
-    m.cols = 0;
+    matrix.data = nullptr;
+    matrix.rows = 0;
+    matrix.cols = 0;
 }
 
-
-
-Matrix matrix_add(Matrix a, Matrix b) {
-    if (a.rows != b.rows || a.cols != b.cols) {
+Matrix add_matrices(Matrix first_matrix, Matrix second_matrix) {
+    if (first_matrix.rows != second_matrix.rows || first_matrix.cols != second_matrix.cols) {
         throw std::invalid_argument("Matrix dimensions must match");
     }
 
-    if (a.data == nullptr || b.data == nullptr) {
+    if (first_matrix.data == nullptr || second_matrix.data == nullptr) {
         throw std::invalid_argument("Matrix data is null");
     }
 
-    Matrix result = create_matrix(a.rows, a.cols);
+    Matrix result = create_matrix(first_matrix.rows, first_matrix.cols);
 
-    for (int i = 0; i < a.rows; i++) {
-        for (int j = 0; j < a.cols; j++) {
-            result.data[i][j] = a.data[i][j] + b.data[i][j];
+    for (int i = 0; i < first_matrix.rows; i++) {
+        for (int j = 0; j < first_matrix.cols; j++) {
+            result.data[i][j] = first_matrix.data[i][j] + second_matrix.data[i][j];
         }
     }
 
     return result;
 }
 
-
-
-Matrix matrix_multiply(Matrix a, Matrix b) {
-    if (a.cols != b.rows) {
+Matrix multiply_matrices(Matrix first_matrix, Matrix second_matrix) {
+    if (first_matrix.cols != second_matrix.rows) {
         throw std::invalid_argument("Matrix dimensions are incompatible");
     }
 
-    if (a.data == nullptr || b.data == nullptr) {
+    if (first_matrix.data == nullptr || second_matrix.data == nullptr) {
         throw std::invalid_argument("Matrix data is null");
     }
 
-    Matrix result = create_matrix(a.rows, b.cols);
+    Matrix result = create_matrix(first_matrix.rows, second_matrix.cols);
 
-    for (int i = 0; i < a.rows; i++) {
-        for (int j = 0; j < b.cols; j++) {
-            for (int k = 0; k < a.cols; k++) {
-                result.data[i][j] += a.data[i][k] * b.data[k][j];
+    for (int i = 0; i < first_matrix.rows; i++) {
+        for (int j = 0; j < second_matrix.cols; j++) {
+            for (int k = 0; k < first_matrix.cols; k++) {
+                result.data[i][j] += first_matrix.data[i][k] * second_matrix.data[k][j];
             }
         }
     }
@@ -104,28 +107,24 @@ Matrix matrix_multiply(Matrix a, Matrix b) {
     return result;
 }
 
-
-
-
-void print_matrix(Matrix m) {
-    // 1. Проверка валидности матрицы
-    if (m.data == nullptr || m.rows <= 0 || m.cols <= 0) {
+void print_matrix(Matrix matrix) {
+    // Для пустой матрицы выводим отдельное сообщение.
+    if (matrix.data == nullptr || matrix.rows <= 0 || matrix.cols <= 0) {
         std::cout << "[Empty matrix]" << std::endl;
         return;
     }
 
-    std::cout << std::fixed << std::setprecision(2);
+    std::cout << std::fixed << std::setprecision(kOutputPrecision);
 
-    const int MAX_ROWS_TO_SHOW = 10;
-    const int MAX_COLS_TO_SHOW = 8;
-    bool show_summary = (m.rows > MAX_ROWS_TO_SHOW || m.cols > MAX_COLS_TO_SHOW);
-    int rows_to_show = show_summary ? MAX_ROWS_TO_SHOW : m.rows;
-    int cols_to_show = show_summary ? MAX_COLS_TO_SHOW : m.cols;
+    const bool show_summary = (matrix.rows > kMaxRowsToShow || matrix.cols > kMaxColsToShow);
+    const int rows_to_show = show_summary ? kMaxRowsToShow : matrix.rows;
+    const int cols_to_show = show_summary ? kMaxColsToShow : matrix.cols;
 
     for (int i = 0; i < rows_to_show; i++) {
-        if (show_summary && i == MAX_ROWS_TO_SHOW / 2 && m.rows > MAX_ROWS_TO_SHOW) {
+        if (show_summary && i == kMaxRowsToShow / kSummaryMarkerCount &&
+            matrix.rows > kMaxRowsToShow) {
             std::cout << "[...";
-            for (int j = 0; j < cols_to_show - 2; j++) {
+            for (int j = 0; j < cols_to_show - kSummaryMarkerCount; j++) {
                 std::cout << "       ";
             }
             std::cout << "...]" << std::endl;
@@ -135,53 +134,52 @@ void print_matrix(Matrix m) {
         std::cout << "[";
 
         for (int j = 0; j < cols_to_show; j++) {
-            if (show_summary && j == MAX_COLS_TO_SHOW / 2 && m.cols > MAX_COLS_TO_SHOW) {
+            if (show_summary && j == kMaxColsToShow / kSummaryMarkerCount &&
+                matrix.cols > kMaxColsToShow) {
                 std::cout << " ... ";
                 continue;
             }
 
-            std::cout << std::setw(6) << m.data[i][j];
+            std::cout << std::setw(kElementWidth) << matrix.data[i][j];
 
             if (j < cols_to_show - 1) {
                 std::cout << " ";
             }
         }
 
-        std::cout << "]"; 
+        std::cout << "]";
 
-        if (show_summary && m.cols > MAX_COLS_TO_SHOW) {
+        if (show_summary && matrix.cols > kMaxColsToShow) {
             std::cout << " ...";
         }
 
         std::cout << std::endl;
     }
 
-    if (show_summary && m.rows > MAX_ROWS_TO_SHOW) {
+    if (show_summary && matrix.rows > kMaxRowsToShow) {
         std::cout << "[...";
-        for (int j = 0; j < std::min(cols_to_show, m.cols); j++) {
+        for (int j = 0; j < std::min(cols_to_show, matrix.cols); j++) {
             std::cout << " ... ";
         }
         std::cout << "...]" << std::endl;
     }
 
     if (show_summary) {
-        std::cout << "Matrix " << m.rows << "×" << m.cols
-                  << " (showing first " << rows_to_show << "×" << cols_to_show << ")"
-                  << std::endl;
+        std::cout << "Matrix " << matrix.rows << "×" << matrix.cols << " (showing first "
+                  << rows_to_show << "×" << cols_to_show << ")" << std::endl;
     }
 }
 
-
-Matrix matrix_transpose(Matrix m) {
-    if (m.data == nullptr) {
+Matrix transpose_matrix(Matrix matrix) {
+    if (matrix.data == nullptr) {
         throw std::invalid_argument("Matrix data is null");
     }
 
-    Matrix result = create_matrix(m.cols, m.rows);
+    Matrix result = create_matrix(matrix.cols, matrix.rows);
 
-    for (int i = 0; i < m.rows; i++) {
-        for (int j = 0; j < m.cols; j++) {
-            result.data[j][i] = m.data[i][j];
+    for (int i = 0; i < matrix.rows; i++) {
+        for (int j = 0; j < matrix.cols; j++) {
+            result.data[j][i] = matrix.data[i][j];
         }
     }
 
