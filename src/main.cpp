@@ -17,6 +17,9 @@ int main() {
     printf("Matrix A:\n");
     print_matrix(A);
 
+    printf("Matrix B:\n");
+    print_matrix(B);
+
     printf("Sum A+B:\n");
     print_matrix(sum);
 
